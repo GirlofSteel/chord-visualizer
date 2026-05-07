@@ -1,12 +1,12 @@
 <template>
   <div id="app-container" class="min-h-screen pb-8" style="background-color: #F5F5F7; font-family: -apple-system, BlinkMacSystemFont, 'SF Pro', 'PingFang SC', sans-serif;">
     <!-- 头部 -->
-    <header class="py-8 text-center relative">
+    <header class="py-4 text-center relative">
       <!-- 语言切换 - Segmented Control -->
       <div class="absolute top-4 right-4 flex rounded-lg overflow-hidden border" style="border-color: #EAEAEA;">
         <button
           @click="locale = 'en'"
-          class="px-3 py-1.5 text-sm transition-colors duration-200"
+          class="px-2 py-1 text-xs transition-colors duration-200"
           :class="locale === 'en' ? 'text-white' : 'bg-white text-gray-500 hover:bg-gray-50'"
           :style="locale === 'en' ? 'background-color: #111111;' : ''"
         >
@@ -14,20 +14,13 @@
         </button>
         <button
           @click="locale = 'zh'"
-          class="px-3 py-1.5 text-sm transition-colors duration-200"
+          class="px-2 py-1 text-xs transition-colors duration-200"
           :class="locale === 'zh' ? 'text-white' : 'bg-white text-gray-500 hover:bg-gray-50'"
           :style="locale === 'zh' ? 'background-color: #111111;' : ''"
         >
           中文
         </button>
       </div>
-
-      <h1 class="text-4xl font-semibold" style="color: #111111;">
-        Chord Visualizer
-      </h1>
-      <p class="mt-2 text-sm" style="color: #999999;">
-        {{ locale === 'zh' ? '输入和弦序列，实时播放并可视化' : 'Enter chord progressions for real-time playback and visualization' }}
-      </p>
     </header>
 
     <!-- 主内容 -->
@@ -35,8 +28,18 @@
 
       <!-- 关键内容区域（用于截图） -->
       <div id="capture-area" class="space-y-4">
+        <!-- 标题和副标题 -->
+        <div class="text-center py-4">
+          <h1 class="text-2xl md:text-4xl font-semibold" style="color: #111111;">
+            Chord Visualizer
+          </h1>
+          <p class="mt-1 md:mt-2 text-xs md:text-sm" style="color: #999999;">
+            {{ locale === 'zh' ? '输入和弦序列，实时播放并可视化' : 'Enter chord progressions for real-time playback and visualization' }}
+          </p>
+        </div>
+
         <!-- 乐器切换卡片 -->
-        <InstrumentSwitch v-model="instrument" />
+        <InstrumentSwitch v-model="instrument" class="capture-hide" />
 
         <!-- 和弦输入卡片 -->
         <ChordCard
@@ -97,12 +100,12 @@ const locale = ref<'en' | 'zh'>('en');
 provide('locale', locale);
 
 // 钢琴和吉他分别保存各自上次输入的和弦
-const pianoChordInput = ref('C G Am F');
+const pianoChordInput = ref('');
 const guitarChordInput = ref('');
 
 // 当前显示的和弦输入（根据乐器切换）
-const chordInput = ref('C G Am F');
-const chords = ref<string[]>(['C', 'G', 'Am', 'F']);
+const chordInput = ref('');
+const chords = ref<string[]>([]);
 const bpm = ref(100);
 const instrument = ref<InstrumentType>('piano');
 const capo = ref(0);
@@ -283,6 +286,13 @@ const exportData = async () => {
       const canvas = await html2canvas(captureArea, {
         backgroundColor: '#F5F5F7',
         scale: 2,
+        onclone: (clonedDoc) => {
+          // 隐藏不需要的部分
+          const hiddenElements = clonedDoc.querySelectorAll('.capture-hide');
+          hiddenElements.forEach(el => {
+            (el as HTMLElement).style.display = 'none';
+          });
+        }
       });
       const imgUrl = canvas.toDataURL('image/png');
       const a = document.createElement('a');
