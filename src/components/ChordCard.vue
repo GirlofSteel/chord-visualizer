@@ -87,7 +87,7 @@
 <script setup lang="ts">
 import { inject, computed } from 'vue';
 
-const props = defineProps<{
+defineProps<{
   modelValue: string;
   instrument: 'piano' | 'guitar';
   capo: number;

@@ -81,7 +81,7 @@ import { CHORD_FINGERINGS } from '../constants/chordFingerings';
 import { inject } from 'vue';
 
 const locale = inject<'en' | 'zh'>('locale', 'en');
-const props = withDefaults(defineProps<{
+withDefaults(defineProps<{
   chords: string[];
   currentIndex: number;
   capo?: number;

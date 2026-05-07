@@ -86,8 +86,10 @@ import ChordCard from './components/ChordCard.vue';
 import PlaybackCard from './components/PlaybackCard.vue';
 import Piano from './components/Piano.vue';
 import Guitar from './components/Guitar.vue';
-import { useAudio, type InstrumentType } from './composables/useAudio';
-import { getChordNotes, parseChordInput, transposeNote, transposeChord, getNoteMidi, adjustChordToRange } from './utils/chordUtils';
+import { useAudio } from './composables/useAudio';
+import { getChordNotes, parseChordInput, transposeChord, getNoteMidi, adjustChordToRange } from './utils/chordUtils';
+
+type InstrumentType = 'piano' | 'guitar';
 
 // 语言
 const locale = ref<'en' | 'zh'>('en');
@@ -235,7 +237,7 @@ const onPlayNote = (note: string) => {
   audio.playSingleNote(note);
 };
 
-const onPlayChord = (chordName: string, originalChordName: string) => {
+const onPlayChord = (_chordName: string, originalChordName: string) => {
   const originalNotes = getChordNotes(originalChordName);
   
   // 将音符转换为 MIDI 值

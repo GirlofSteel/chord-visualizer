@@ -57,7 +57,7 @@
 <script setup lang="ts">
 import { inject, computed } from 'vue';
 
-const props = defineProps<{
+defineProps<{
   modelValue: number;
   isPlaying: boolean;
 }>();

@@ -1,4 +1,4 @@
-import { Chord, Note } from '@tonaljs/tonal';
+import { Chord } from '@tonaljs/tonal';
 
 // 降号转等效升号
 function flatToSharp(note: string): string {
@@ -225,9 +225,6 @@ export function adjustChordToRange(midiNotes: number[]): number[] {
   const MIN_MIDI = 48; // C3
   const MAX_MIDI = 83; // B4
   
-  const minMidi = Math.min(...midiNotes);
-  const maxMidi = Math.max(...midiNotes);
-  
   let adjusted = [...midiNotes];
   
   // 若最低音低于 C3 则和弦整体高八度
@@ -278,8 +275,8 @@ function transposeNoteSimple(noteName: string, semitones: number): string {
   return sharpToFlatMap[noteNames[newMidi]] || noteNames[newMidi];
 }
 
-// 将升号转换为更常用的降号表示
-function sharpToFlat(note: string): string {
+// 将升号转换为更常用的降号表示 (暂未使用)
+function _sharpToFlat(note: string): string {
   const sharpToFlatMap: Record<string, string> = {
     'C#': 'Db', 'D#': 'Eb', 'F#': 'Gb', 'G#': 'Ab', 'A#': 'Bb',
     'E#': 'F', 'B#': 'C'

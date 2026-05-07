@@ -45,7 +45,7 @@ interface ChordItem {
   notes: string[];     // 转调后的音符
 }
 
-const props = defineProps<{
+defineProps<{
   chordList: ChordItem[];
   currentIndex: number;
 }>();
