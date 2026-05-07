@@ -275,19 +275,6 @@ function transposeNoteSimple(noteName: string, semitones: number): string {
   return sharpToFlatMap[noteNames[newMidi]] || noteNames[newMidi];
 }
 
-// 将升号转换为更常用的降号表示 (暂未使用)
-function _sharpToFlat(note: string): string {
-  const sharpToFlatMap: Record<string, string> = {
-    'C#': 'Db', 'D#': 'Eb', 'F#': 'Gb', 'G#': 'Ab', 'A#': 'Bb',
-    'E#': 'F', 'B#': 'C'
-  };
-  const match = note.match(/^([A-G][#b]?)(\d+)$/);
-  if (!match) return note;
-  const notePart = match[1];
-  const octave = match[2];
-  return (sharpToFlatMap[notePart] || notePart) + octave;
-}
-
 export function getPianoNotes(startOctave: number = 4, octaves: number = 2): string[] {
   const notes: string[] = [];
   const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];

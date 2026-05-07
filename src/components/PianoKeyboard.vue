@@ -43,7 +43,6 @@ const whiteNotes = [
 
 // 黑键：每个黑键位于两白键之间的间隙中央
 // 7个白键每个占 100/14 ≈ 7.14%，黑键宽度约为 3.2%
-const whiteKeyWidth = 100 / 14;
 const allBlackNotes = [
   // 第一个八度 (位置 1-5)
   { note: 'C#3', left: 4 },
