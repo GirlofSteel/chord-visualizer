@@ -31,7 +31,7 @@
         <!-- 标题和副标题 -->
         <div class="text-center py-4">
           <h1 class="text-2xl md:text-4xl font-semibold" style="color: #111111;">
-            Chord Visualizer
+            {{ locale === 'zh' ? '和弦图谱' : 'Chord Visualizer' }}
           </h1>
           <p class="mt-1 md:mt-2 text-xs md:text-sm" style="color: #999999;">
             {{ locale === 'zh' ? '输入和弦序列，实时播放并可视化' : 'Enter chord progressions for real-time playback and visualization' }}
