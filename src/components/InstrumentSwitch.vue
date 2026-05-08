@@ -30,7 +30,7 @@
 </template>
 
 <script setup lang="ts">
-import { inject } from 'vue';
+import { inject, computed } from 'vue';
 
 defineProps<{
   modelValue: 'piano' | 'guitar';
@@ -42,5 +42,5 @@ const emit = defineEmits<{
 
 // 从父组件获取语言设置
 const locale = inject<{ value: 'en' | 'zh' }>('locale');
-const isZh = locale?.value === 'zh';
+const isZh = computed(() => locale?.value === 'zh');
 </script>
