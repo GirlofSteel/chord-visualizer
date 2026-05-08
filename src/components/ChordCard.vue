@@ -79,7 +79,7 @@
 
     <!-- 可视化区域 -->
     <h2 class="text-base font-medium mb-4 text-center" style="color: #666666;">
-      {{ instrument === 'piano' ? (isZh ? '🎹 钢琴指法' : '🎹 Piano Fingering') : (isZh ? '🎸 吉他指法' : '🎸 Guitar Fingering') }}
+      {{ instrument === 'piano' ? (isZh ? '钢琴指法' : 'Piano Fingering') : (isZh ? '吉他指法' : 'Guitar Fingering') }}
     </h2>
     <div id="visualization-area" class="overflow-x-auto">
       <slot></slot>

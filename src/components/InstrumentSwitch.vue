@@ -11,7 +11,13 @@
         ]"
         :style="modelValue === 'piano' ? { backgroundColor: '#111111' } : {}"
       >
-        {{ isZh ? '🎹 钢琴' : '🎹 Piano' }}
+        <img 
+          src="/piano.svg" 
+          alt="Piano" 
+          class="inline-block w-5 h-5 mr-2 align-middle"
+          :style="{ filter: modelValue === 'piano' ? 'brightness(0) invert(1)' : 'none' }"
+        />
+        {{ isZh ? '钢琴' : 'Piano' }}
       </button>
       <button
         @click="emit('update:modelValue', 'guitar')"
@@ -23,7 +29,13 @@
         ]"
         :style="modelValue === 'guitar' ? { backgroundColor: '#111111' } : {}"
       >
-        {{ isZh ? '🎸 吉他' : '🎸 Guitar' }}
+        <img 
+          src="/guitar.svg" 
+          alt="Guitar" 
+          class="inline-block w-5 h-5 mr-2 align-middle"
+          :style="{ filter: modelValue === 'guitar' ? 'brightness(0) invert(1)' : 'none' }"
+        />
+        {{ isZh ? '吉他' : 'Guitar' }}
       </button>
     </div>
   </div>
