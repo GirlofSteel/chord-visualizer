@@ -219,25 +219,21 @@ export function transposeNote(noteName: string, semitones: number): string {
 }
 
 // 调整和弦音符到 C3-B4 区间
+// 优先保持原始八度位置，只在超出上限时才降八度
 export function adjustChordToRange(midiNotes: number[]): number[] {
   if (midiNotes.length === 0) return midiNotes;
   
-  const MIN_MIDI = 48; // C3
   const MAX_MIDI = 83; // B4
   
-  let adjusted = [...midiNotes];
-  
-  // 若最低音低于 C3 则和弦整体高八度
-  while (Math.min(...adjusted) < MIN_MIDI) {
-    adjusted = adjusted.map(m => m + 12);
-  }
-  
-  // 若最高音高于 B4 则和弦整体低八度
-  while (Math.max(...adjusted) > MAX_MIDI) {
-    adjusted = adjusted.map(m => m - 12);
-  }
-  
-  return adjusted;
+  // 只检查是否超出上限，只在超限时才降八度
+  // 不再主动升高低于下限的音符（降调时音符自然偏低是正常的）
+  return midiNotes.map(m => {
+    // 如果超出上限，降八度
+    if (m > MAX_MIDI) {
+      return m - 12;
+    }
+    return m;
+  });
 }
 
 export function transposeChord(chordName: string, semitones: number): string {

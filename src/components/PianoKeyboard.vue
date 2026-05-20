@@ -35,30 +35,9 @@
 </template>
 
 <script setup lang="ts">
-// 白键: C D E F G A B (两个八度 C3-B4)
-const whiteNotes = [
-  'C3', 'D3', 'E3', 'F3', 'G3', 'A3', 'B3',
-  'C4', 'D4', 'E4', 'F4', 'G4', 'A4', 'B4'
-];
+import { computed } from 'vue';
 
-// 黑键：每个黑键位于两白键之间的间隙中央
-// 7个白键每个占 100/14 ≈ 7.14%，黑键宽度约为 3.2%
-const allBlackNotes = [
-  // 第一个八度 (位置 1-5)
-  { note: 'C#3', left: 4 },
-  { note: 'D#3', left: 12 },
-  { note: 'F#3', left: 25 },
-  { note: 'G#3', left: 33 },
-  { note: 'A#3', left: 41 },
-  // 第二个八度 (位置 8-12)
-  { note: 'C#4', left: 54},
-  { note: 'D#4', left: 62},
-  { note: 'F#4', left: 75 },
-  { note: 'G#4', left: 83 },
-  { note: 'A#4', left: 91 },
-];
-
-defineProps<{
+const props = defineProps<{
   activeNotes: string[];
 }>();
 
@@ -90,9 +69,69 @@ const getBaseNote = (note: string): string => {
 
 // 获取音符的八度
 const getOctave = (note: string): number => {
-  const match = note.match(/(\d+)$/);
+  const match = note.match(/(-?\d+)$/);
   return match ? parseInt(match[1]) : 4;
 };
+
+// 根据 activeNotes 动态计算八度范围
+const octaveRange = computed(() => {
+  if (props.activeNotes.length === 0) {
+    return { start: 3, end: 4 }; // 默认 C3-B4
+  }
+  
+  const octaves = props.activeNotes.map(note => getOctave(note));
+  const minOct = Math.min(...octaves);
+  const maxOct = Math.max(...octaves);
+  
+  // 确保至少覆盖2个八度
+  const start = minOct;
+  const end = Math.max(maxOct, minOct + 1);
+  
+  return { start, end };
+});
+
+// 动态生成白键列表
+const whiteNoteNames = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+
+const whiteNotes = computed(() => {
+  const notes: string[] = [];
+  for (let oct = octaveRange.value.start; oct <= octaveRange.value.end; oct++) {
+    for (const name of whiteNoteNames) {
+      notes.push(name + oct);
+    }
+  }
+  return notes;
+});
+
+// 动态生成黑键列表及位置
+const blackNotePattern = [
+  { name: 'C#', positionInOctave: 1 },  // 在 C 和 D 之间
+  { name: 'D#', positionInOctave: 2 },  // 在 D 和 E 之间
+  { name: 'F#', positionInOctave: 4 },  // 在 F 和 G 之间
+  { name: 'G#', positionInOctave: 5 },  // 在 G 和 A 之间
+  { name: 'A#', positionInOctave: 6 },  // 在 A 和 B 之间
+];
+
+const allBlackNotes = computed(() => {
+  const totalWhiteKeys = whiteNotes.value.length;
+  const whiteKeyWidth = 100 / totalWhiteKeys;
+  
+  const result: { note: string; left: number }[] = [];
+  
+  for (let oct = octaveRange.value.start; oct <= octaveRange.value.end; oct++) {
+    const octaveOffset = (oct - octaveRange.value.start) * 7;
+    for (const bn of blackNotePattern) {
+      // 黑键位于对应白键的右边缘
+      const leftPos = (octaveOffset + bn.positionInOctave) * whiteKeyWidth - whiteKeyWidth * 0.225;
+      result.push({
+        note: bn.name + oct,
+        left: leftPos,
+      });
+    }
+  }
+  
+  return result;
+});
 
 // 检查某个音符是否激活
 const isNoteActive = (note: string, chordNotes: string[]): boolean => {
@@ -125,7 +164,7 @@ const isNoteActive = (note: string, chordNotes: string[]): boolean => {
   justify-content: center;
   position: relative;
   height: 80px;
-  width: 250px;
+  min-width: 250px;
   margin: 0 auto;
 }
 
@@ -186,7 +225,6 @@ const isNoteActive = (note: string, chordNotes: string[]): boolean => {
   top: 0;
   left: 0;
   width: 100%;
-  max-width: 250px;
   height: 55%;
   pointer-events: none;
 }
