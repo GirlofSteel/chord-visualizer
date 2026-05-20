@@ -1,6 +1,6 @@
 <template>
   <div class="bg-white rounded-card p-4 shadow-card">
-    <div class="flex items-center justify-center gap-6">
+    <div v-if="false" class="flex items-center justify-center gap-6">
       <span class="text-sm font-medium" style="color: #666666;">{{ isZh ? '速度' : 'Speed' }}</span>
       <input
         type="range"
@@ -15,14 +15,15 @@
     </div>
 
     <!-- 分隔线 -->
-    <div class="border-t my-4" style="border-color: #EAEAEA;"></div>
+    <div v-if="false" class="border-t my-4" style="border-color: #EAEAEA;"></div>
 
     <div class="flex justify-center gap-4">
       <button
+        v-if="false"
         @click="emit('toggle-play')"
         class="px-8 py-3 rounded-pill font-medium text-base transition-all duration-200"
-        :style="isPlaying 
-          ? { backgroundColor: '#FF3B30', color: 'white' } 
+        :style="isPlaying
+          ? { backgroundColor: '#FF3B30', color: 'white' }
           : { backgroundColor: '#34C759', color: 'white' }"
       >
         <span class="flex items-center gap-2">
