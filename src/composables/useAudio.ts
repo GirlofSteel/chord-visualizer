@@ -1,26 +1,82 @@
 import { ref, onUnmounted } from 'vue';
 import * as Tone from 'tone';
 import { getChordNotes } from '../utils/chordUtils';
+import { CHORD_FINGERINGS } from '../constants/chordFingerings';
 
-export type InstrumentType = 'piano' | 'guitar' | 'synth';
+export type InstrumentType = 'piano' | 'guitar';
+
+// 吉他六根弦的空弦音（从6弦到1弦）
+const GUITAR_OPEN_STRINGS = ['E2', 'A2', 'D3', 'G3', 'B3', 'E4'];
+
+// 获取和弦的吉他指法
+function getGuitarFingering(chordName: string): string[] {
+  // 先尝试完整匹配（如 Cmaj7）
+  if (CHORD_FINGERINGS[chordName]) {
+    return CHORD_FINGERINGS[chordName];
+  }
+
+  // 分离根音和后缀
+  const match = chordName.match(/^([A-G][#b]?)(.*)$/);
+  if (!match) return ['X', 'X', 'X', 'X', 'X', 'X'];
+
+  const root = match[1];
+  const suffix = match[2] || '';
+
+  // 尝试根音+后缀
+  if (CHORD_FINGERINGS[root + suffix]) {
+    return CHORD_FINGERINGS[root + suffix];
+  }
+
+  // 尝试只有根音
+  if (CHORD_FINGERINGS[root]) {
+    return CHORD_FINGERINGS[root];
+  }
+
+  return ['X', 'X', 'X', 'X', 'X', 'X'];
+}
+
+// 根据指法获取要演奏的音符（逐弦）
+export function getGuitarNotesFromFingering(chordName: string): string[] {
+  const fingering = getGuitarFingering(chordName);
+  const notes: string[] = [];
+
+  fingering.forEach((fret, stringIndex) => {
+    if (fret === 'X') return; // 跳过静音弦
+
+    const openNote = GUITAR_OPEN_STRINGS[stringIndex];
+    if (fret === '0') {
+      // 空弦，直接使用空弦音
+      notes.push(openNote);
+    } else {
+      // 按品格，计算实际音高
+      const midi = Tone.Frequency(openNote).toMidi();
+      const fretNum = parseInt(fret);
+      const targetMidi = midi + fretNum; // 每升高一格加一个半音
+      notes.push(Tone.Frequency(targetMidi, 'midi').toNote());
+    }
+  });
+
+  return notes;
+}
 
 export function useAudio() {
   const isPlaying = ref(false);
   const currentChordIndex = ref(-1);
   const transpose = ref(0);
 
-  let synth: Tone.PolySynth | null = null;
+  let pianoSynth: Tone.PolySynth | null = null;
+  let guitarSynth: Tone.PluckSynth | null = null;
   let sequence: Tone.Sequence | null = null;
   let chords: string[] = [];
 
-  const initAudio = async () => {
+  const initPianoAudio = async () => {
     if (Tone.context.state !== 'running') {
       await Tone.start();
     }
 
-    if (synth) return synth;
+    if (pianoSynth) return pianoSynth;
 
-    synth = new Tone.PolySynth(Tone.Synth, {
+    pianoSynth = new Tone.PolySynth(Tone.Synth, {
       oscillator: { type: 'triangle' },
       envelope: {
         attack: 0.005,
@@ -29,44 +85,86 @@ export function useAudio() {
         release: 0.5,
       },
     }).toDestination();
-    synth.volume.value = -8;
-    return synth;
+    pianoSynth.volume.value = -8;
+    return pianoSynth;
   };
 
-  const playChord = async (chordName: string) => {
-    const s = await initAudio();
-    if (!s) return;
+  const initGuitarAudio = async () => {
+    if (Tone.context.state !== 'running') {
+      await Tone.start();
+    }
 
-    const notes = getChordNotes(chordName);
-    if (notes.length === 0) return;
+    if (guitarSynth) return guitarSynth;
 
-    s.releaseAll();
-    s.triggerAttackRelease(notes, '4n');
+    guitarSynth = new Tone.PluckSynth({
+      attackNoise: 0.5,
+      dampening: 2000,
+      resonance: 0.9,
+      volume: -6,
+    }).toDestination();
+
+    return guitarSynth;
   };
 
-  const playSingleNote = async (note: string) => {
-    const s = await initAudio();
-    if (!s) return;
+  const playChord = async (chordName: string, instrument: InstrumentType = 'piano') => {
+    if (instrument === 'guitar') {
+      const guitarNotes = getGuitarNotesFromFingering(chordName);
+      if (guitarNotes.length === 0) return;
 
-    s.triggerAttackRelease(note, '4n');
+      const s = await initGuitarAudio();
+      if (!s) return;
+      // 吉他逐弦发声
+      guitarNotes.forEach((note, i) => {
+        setTimeout(() => {
+          s.triggerAttack(note);
+        }, i * 60);
+      });
+    } else {
+      const notes = getChordNotes(chordName);
+      if (notes.length === 0) return;
+      const s = await initPianoAudio();
+      if (!s) return;
+      s.releaseAll();
+      s.triggerAttackRelease(notes, '4n');
+    }
+  };
+
+  const playSingleNote = async (note: string, instrument: InstrumentType = 'piano') => {
+    if (instrument === 'guitar') {
+      const s = await initGuitarAudio();
+      if (!s) return;
+      s.triggerAttack(note);
+    } else {
+      const s = await initPianoAudio();
+      if (!s) return;
+      s.triggerAttackRelease(note, '4n');
+    }
   };
 
   // 播放一组音符（用于转调后的和弦）
-  const playNotes = async (notes: string[]) => {
-    const s = await initAudio();
-    if (!s) return;
+  const playNotes = async (notes: string[], instrument: InstrumentType = 'piano') => {
     if (notes.length === 0) return;
 
-    s.releaseAll();
-    s.triggerAttackRelease(notes, '4n');
+    if (instrument === 'guitar') {
+      const s = await initGuitarAudio();
+      if (!s) return;
+      // 吉他逐根弦发声
+      notes.forEach((note, i) => {
+        setTimeout(() => {
+          s.triggerAttack(note);
+        }, i * 60);
+      });
+    } else {
+      const s = await initPianoAudio();
+      if (!s) return;
+      s.releaseAll();
+      s.triggerAttackRelease(notes, '4n');
+    }
   };
 
-  const playSequence = async (chordList: string[], bpm: number) => {
+  const playSequence = async (chordList: string[], bpm: number, instrument: InstrumentType = 'piano') => {
     chords = chordList;
     Tone.Transport.bpm.value = bpm;
-
-    const s = await initAudio();
-    if (!s) return;
 
     if (sequence) {
       sequence.stop();
@@ -82,8 +180,22 @@ export function useAudio() {
 
         const notes = getChordNotes(chord);
         if (notes.length > 0) {
-          s.releaseAll();
-          s.triggerAttackRelease(notes, '2n', time);
+          if (instrument === 'guitar') {
+            const s = guitarSynth;
+            if (s) {
+              notes.forEach((note, i) => {
+                Tone.Transport.scheduleOnce(() => {
+                  s.triggerAttack(note);
+                }, time + i * 0.06);
+              });
+            }
+          } else {
+            const s = pianoSynth;
+            if (s) {
+              s.releaseAll();
+              s.triggerAttackRelease(notes, '2n', time);
+            }
+          }
         }
 
         // 使用 Tone.Draw 确保 UI 在正确的时机更新
@@ -117,8 +229,8 @@ export function useAudio() {
       sequence.dispose();
       sequence = null;
     }
-    if (synth) {
-      synth.releaseAll();
+    if (pianoSynth) {
+      pianoSynth.releaseAll();
     }
     Tone.Transport.stop();
     isPlaying.value = false;
@@ -131,8 +243,11 @@ export function useAudio() {
 
   onUnmounted(() => {
     stopSequence();
-    if (synth) {
-      synth.dispose();
+    if (pianoSynth) {
+      pianoSynth.dispose();
+    }
+    if (guitarSynth) {
+      guitarSynth.dispose();
     }
   });
 

@@ -84,6 +84,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, provide } from 'vue';
 import html2canvas from 'html2canvas';
+import * as Tone from 'tone';
 import InstrumentSwitch from './components/InstrumentSwitch.vue';
 import ChordCard from './components/ChordCard.vue';
 import PlaybackCard from './components/PlaybackCard.vue';
@@ -91,6 +92,7 @@ import Piano from './components/Piano.vue';
 import Guitar from './components/Guitar.vue';
 import { useAudio } from './composables/useAudio';
 import { getChordNotes, parseChordInput, transposeChord, getNoteMidi, adjustChordToRange } from './utils/chordUtils';
+import { getGuitarNotesFromFingering } from './composables/useAudio';
 
 type InstrumentType = 'piano' | 'guitar';
 
@@ -202,42 +204,49 @@ const onChordClick = (chord: string, index: number) => {
   currentChord.value = originalChord;
   selectedIndex.value = index;
   
-  // 如果使用变调夹，需要转调播放
-  if (capo.value > 0) {
-    const notes = getChordNotes(originalChord);
-    if (notes.length > 0) {
-      // 将音符转换为 MIDI 值
-      let midiNotes = notes.map(note => {
-        const match = note.match(/^([A-G][#b]?)(-?\d+)?$/);
-        if (!match) return 60;
-        const notePart = match[1];
-        const octave = parseInt(match[2]) || 4;
-        return getNoteMidi(notePart) + (octave + 1) * 12;
-      });
-      
-      // 应用变调夹转调
-      midiNotes = midiNotes.map(m => m + capo.value);
-      
-      // 调整到 C3-B4 区间
-      midiNotes = adjustChordToRange(midiNotes);
-      
-      // 转换回音符名称
-      const transposedNotes = midiNotes.map(m => {
-        const octave = Math.floor(m / 12) - 1;
-        const noteIndex = m % 12;
-        const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-        return noteNames[noteIndex] + octave;
-      });
-      
-      audio.playNotes(transposedNotes);
-    }
+  // 吉他模式：始终拨响所有弦，变调夹调整音高
+  if (instrument.value === 'guitar') {
+    const guitarNotes = getGuitarNotesFromFingering(originalChord);
+    const adjustedNotes = capo.value > 0
+      ? guitarNotes.map(note => {
+          const midi = Tone.Frequency(note).toMidi();
+          return Tone.Frequency(midi + capo.value, 'midi').toNote();
+        })
+      : guitarNotes;
+    audio.playNotes(adjustedNotes, 'guitar');
   } else {
-    audio.playChord(originalChord);
+    // 钢琴模式：如果使用变调夹，需要转调播放
+    if (capo.value > 0) {
+      const notes = getChordNotes(originalChord);
+      if (notes.length > 0) {
+        let midiNotes = notes.map(note => {
+          const match = note.match(/^([A-G][#b]?)(-?\d+)?$/);
+          if (!match) return 60;
+          const notePart = match[1];
+          const octave = parseInt(match[2]) || 4;
+          return getNoteMidi(notePart) + (octave + 1) * 12;
+        });
+        
+        midiNotes = midiNotes.map(m => m + capo.value);
+        midiNotes = adjustChordToRange(midiNotes);
+        
+        const transposedNotes = midiNotes.map(m => {
+          const octave = Math.floor(m / 12) - 1;
+          const noteIndex = m % 12;
+          const noteNames = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+          return noteNames[noteIndex] + octave;
+        });
+        
+        audio.playNotes(transposedNotes, 'piano');
+      }
+    } else {
+      audio.playChord(originalChord, 'piano');
+    }
   }
 };
 
 const onPlayNote = (note: string) => {
-  audio.playSingleNote(note);
+  audio.playSingleNote(note, instrument.value);
 };
 
 const onPlayChord = (_chordName: string, originalChordName: string) => {
@@ -268,14 +277,14 @@ const onPlayChord = (_chordName: string, originalChordName: string) => {
     return noteNames[noteIndex] + octave;
   });
   
-  audio.playNotes(transposedNotes);
+  audio.playNotes(transposedNotes, instrument.value);
 };
 
 const togglePlay = () => {
   if (isPlaying.value) {
     audio.stopSequence();
   } else {
-    audio.playSequence(chords.value, bpm.value);
+    audio.playSequence(chords.value, bpm.value, instrument.value);
   }
 };
 
