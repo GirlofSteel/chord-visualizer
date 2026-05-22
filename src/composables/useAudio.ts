@@ -65,7 +65,7 @@ export function useAudio() {
   const transpose = ref(0);
 
   let pianoSynth: Tone.PolySynth | null = null;
-  let guitarSynth: Tone.PluckSynth | null = null;
+  let guitarSynth: Tone.PolySynth | null = null;
   let sequence: Tone.Sequence | null = null;
   let chords: string[] = [];
 
@@ -96,12 +96,16 @@ export function useAudio() {
 
     if (guitarSynth) return guitarSynth;
 
-    guitarSynth = new Tone.PluckSynth({
-      attackNoise: 0.5,
-      dampening: 2000,
-      resonance: 0.9,
-      volume: -6,
+    guitarSynth = new Tone.PolySynth(Tone.Synth, {
+      oscillator: { type: 'triangle' },
+      envelope: {
+        attack: 0.005,
+        decay: 0.3,
+        sustain: 0.4,
+        release: 0.5,
+      },
     }).toDestination();
+    guitarSynth.volume.value = -8;
 
     return guitarSynth;
   };
@@ -113,12 +117,16 @@ export function useAudio() {
 
       const s = await initGuitarAudio();
       if (!s) return;
-      // 吉他逐弦发声
+      s.releaseAll();
+      // 逐弦拨响，同时结束
       guitarNotes.forEach((note, i) => {
         setTimeout(() => {
           s.triggerAttack(note);
-        }, i * 60);
+        }, i * 30);
       });
+      setTimeout(() => {
+        s.releaseAll();
+      }, 500);
     } else {
       const notes = getChordNotes(chordName);
       if (notes.length === 0) return;
@@ -133,7 +141,8 @@ export function useAudio() {
     if (instrument === 'guitar') {
       const s = await initGuitarAudio();
       if (!s) return;
-      s.triggerAttack(note);
+      s.releaseAll();
+      s.triggerAttackRelease(note, 0.2);
     } else {
       const s = await initPianoAudio();
       if (!s) return;
@@ -148,12 +157,16 @@ export function useAudio() {
     if (instrument === 'guitar') {
       const s = await initGuitarAudio();
       if (!s) return;
-      // 吉他逐根弦发声
+      s.releaseAll();
+      // 逐弦拨响，同时结束
       notes.forEach((note, i) => {
         setTimeout(() => {
           s.triggerAttack(note);
-        }, i * 60);
+        }, i * 30);
       });
+      setTimeout(() => {
+        s.releaseAll();
+      }, 500);
     } else {
       const s = await initPianoAudio();
       if (!s) return;
@@ -183,11 +196,16 @@ export function useAudio() {
           if (instrument === 'guitar') {
             const s = guitarSynth;
             if (s) {
+              s.releaseAll();
+              // 逐弦拨响，同时结束
               notes.forEach((note, i) => {
                 Tone.Transport.scheduleOnce(() => {
                   s.triggerAttack(note);
-                }, time + i * 0.06);
+                }, time + i * 0.03);
               });
+              Tone.Transport.scheduleOnce(() => {
+                s.releaseAll();
+              }, time + 0.5);
             }
           } else {
             const s = pianoSynth;
@@ -231,6 +249,9 @@ export function useAudio() {
     }
     if (pianoSynth) {
       pianoSynth.releaseAll();
+    }
+    if (guitarSynth) {
+      guitarSynth.releaseAll();
     }
     Tone.Transport.stop();
     isPlaying.value = false;
