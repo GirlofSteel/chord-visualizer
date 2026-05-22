@@ -126,7 +126,7 @@ export function useAudio() {
       });
       setTimeout(() => {
         s.releaseAll();
-      }, 500);
+      }, 400);
     } else {
       const notes = getChordNotes(chordName);
       if (notes.length === 0) return;
@@ -166,7 +166,7 @@ export function useAudio() {
       });
       setTimeout(() => {
         s.releaseAll();
-      }, 500);
+      }, 400);
     } else {
       const s = await initPianoAudio();
       if (!s) return;
@@ -205,7 +205,7 @@ export function useAudio() {
               });
               Tone.Transport.scheduleOnce(() => {
                 s.releaseAll();
-              }, time + 0.5);
+              }, time + 0.4);
             }
           } else {
             const s = pianoSynth;
