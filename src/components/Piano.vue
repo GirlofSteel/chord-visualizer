@@ -19,7 +19,14 @@
       >
         <!-- 左侧和弦名称 -->
         <div class="chord-name">
-          <span class="text-lg font-semibold" style="color: #111111;">{{ chord.name }}</span>
+          <div class="text-lg">
+            <template v-if="chord.name !== chord.originalName">
+              <span style="color: #999999;">{{ chord.originalName }}</span>
+              <span style="color: #BBBBBB; margin: 0 4px;">→</span>
+              <span class="font-semibold" style="color: #111111;">{{ chord.name }}</span>
+            </template>
+            <span v-else class="font-semibold" style="color: #111111;">{{ chord.name }}</span>
+          </div>
           <span class="text-xs mt-1" style="color: #999999;">{{ chord.notes.join(' - ') }}</span>
         </div>
 
