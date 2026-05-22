@@ -207,7 +207,7 @@ const onChordClick = (chord: string, index: number) => {
   // 吉他模式：始终拨响所有弦，变调夹调整音高
   if (instrument.value === 'guitar') {
     const guitarNotes = getGuitarNotesFromFingering(originalChord);
-    const adjustedNotes = capo.value > 0
+    const adjustedNotes = capo.value !== 0
       ? guitarNotes.map(note => {
           const midi = Tone.Frequency(note).toMidi();
           return Tone.Frequency(midi + capo.value, 'midi').toNote();
@@ -216,7 +216,7 @@ const onChordClick = (chord: string, index: number) => {
     audio.playNotes(adjustedNotes, 'guitar');
   } else {
     // 钢琴模式：如果使用变调夹，需要转调播放
-    if (capo.value > 0) {
+    if (capo.value !== 0) {
       const notes = getChordNotes(originalChord);
       if (notes.length > 0) {
         let midiNotes = notes.map(note => {

@@ -35,7 +35,7 @@
       </span>
       <div class="flex items-center gap-2">
         <button
-          v-for="fret in [0, 1, 2, 3, 4, 5, 6]"
+          v-for="fret in [-2, -1, 0, 1, 2, 3, 4, 5, 6, 7]"
           :key="fret"
           @click="emit('update:capo', fret)"
           :class="[
@@ -45,7 +45,7 @@
             ? { backgroundColor: '#111111', color: 'white' } 
             : { backgroundColor: '#EAEAEA', color: '#666666' }"
         >
-          {{ fret === 0 ? (isZh ? '无' : 'Off') : fret }}
+          {{ fret === 0 ? 0 : fret }}
         </button>
       </div>
     </div>
