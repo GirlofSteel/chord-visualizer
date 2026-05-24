@@ -71,7 +71,7 @@ function addOctavesToChord(notes: string[]): string[] {
 
 // 解析斜线和弦，返回 [低音音符, 和弦音符数组]
 function parseSlashChord(chordName: string): { bass: string | null; chord: string[] } {
-  const slashMatch = chordName.match(/^([A-G][#b]?(?:maj7|m7|m9|m7b5|dim7|dim|aug7|aug|sus4|sus2|7sus4|7|6|9|11|13|m)?)\/([A-G][#b]?)$/);
+  const slashMatch = chordName.match(/^([A-G][#b]?(?:mMaj7|maj9|maj11|maj13|m13|m11|m9|m7b5|m7|m6|maj7|dim7|dim|aug7|aug|7sus4|sus4|sus2|7b5|7#5|7b9|7#9|9sus4|69|7|9|11|13|6|m|5|add\d+|madd\d+)?)\/([A-G][#b]?)$/);
   if (!slashMatch) {
     return { bass: null, chord: [] };
   }
@@ -101,10 +101,13 @@ function parseChordManually(chordName: string): string[] {
     'maj7': [0, 4, 7, 11],  // maj7
     'm7': [0, 3, 7, 10],    // m7
     'm9': [0, 3, 7, 10, 14], // m9
+    'm13': [0, 3, 7, 10, 14, 17, 21], // m13
+    'm11': [0, 3, 7, 10, 14, 17], // m11
+    'mMaj7': [0, 3, 7, 11],// mMaj7 (小大七)
     'm7b5': [0, 3, 6, 10],  // m7b5 (半减七)
     'dim7': [0, 3, 6, 9],   // dim7
     'dim': [0, 3, 6],       // dim
-    'aug7': [0, 4, 8, 11],  // aug7
+    'aug7': [0, 4, 8, 10],  // aug7 (增三和弦 + 小七度)
     'aug': [0, 4, 8],       // aug
     'sus4': [0, 5, 7],      // sus4
     'sus2': [0, 2, 7],      // sus2
@@ -114,7 +117,7 @@ function parseChordManually(chordName: string): string[] {
     '9': [0, 4, 7, 10, 14], // dom9
     '11': [0, 4, 7, 10, 14, 17], // dom11
     '13': [0, 4, 7, 10, 14, 17, 21], // dom13
-    'm': [0, 3, 7],         // minor (最后匹配)
+    'm': [0, 3, 7],         // minor
     '': [0, 4, 7],          // major (默认)
   };
 
@@ -309,5 +312,5 @@ export function parseChordInput(input: string): string[] {
       }
       return c.toUpperCase();
     })
-    .filter(c => c.length > 0 && /^[A-G][#b]?(maj7|m7|m9|m11|m13|m7b5|dim7|dim|aug7|aug|sus4|sus2|7sus4|7|6|9|11|13|m|add\d+|madd\d+)?(\/[A-G][#b]?)?$/.test(c));
+    .filter(c => c.length > 0 && /^[A-G][#b]?(mMaj7|maj9|maj11|maj13|m13|m11|m9|m7b5|m7|m6|maj7|dim7|dim|aug7|aug|7sus4|sus4|sus2|7b5|7#5|7b9|7#9|9sus4|69|7|9|11|13|6|m|5|add\d+|madd\d+)?(\/[A-G][#b]?)?$/.test(c));
 }

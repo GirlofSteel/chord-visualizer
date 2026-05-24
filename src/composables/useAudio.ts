@@ -8,6 +8,14 @@ export type InstrumentType = 'piano' | 'guitar';
 // 吉他六根弦的空弦音（从6弦到1弦）
 const GUITAR_OPEN_STRINGS = ['E2', 'A2', 'D3', 'G3', 'B3', 'E4'];
 
+// 将降号根音归一化为升号（Db→C#, Eb→D# 等）
+function normalizeRoot(root: string): string {
+  const flatToSharp: Record<string, string> = {
+    'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#',
+  };
+  return flatToSharp[root] || root;
+}
+
 // 获取和弦的吉他指法
 function getGuitarFingering(chordName: string): string[] {
   // 先尝试完整匹配（如 Cmaj7）
@@ -19,12 +27,13 @@ function getGuitarFingering(chordName: string): string[] {
   const match = chordName.match(/^([A-G][#b]?)(.*)$/);
   if (!match) return ['X', 'X', 'X', 'X', 'X', 'X'];
 
-  const root = match[1];
+  const root = normalizeRoot(match[1]);
   const suffix = match[2] || '';
 
   // 尝试根音+后缀
-  if (CHORD_FINGERINGS[root + suffix]) {
-    return CHORD_FINGERINGS[root + suffix];
+  const key = root + suffix;
+  if (CHORD_FINGERINGS[key]) {
+    return CHORD_FINGERINGS[key];
   }
 
   // 尝试只有根音
