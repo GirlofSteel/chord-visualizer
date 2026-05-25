@@ -1,41 +1,38 @@
 import { Chord } from '@tonaljs/tonal';
 
-// 降号转等效升号
-function flatToSharp(note: string): string {
-  const map: Record<string, string> = {
-    'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#',
-    'Cbb': 'B', 'Dbb': 'C#', 'Ebb': 'D#', 'Fbb': 'Eb', 'Gbb': 'F#', 'Abb': 'G#', 'Bbb': 'A#'
-  };
-  return map[note] || note;
+// 将双升/双降音符简化为等效单升降号（如 C## → D）
+function simplifyAccidental(note: string): string {
+  // C## → D, F## → G, B# → C 等
+  const m = note.match(/^([A-G])(#{1,2}|b{1,2})$/);
+  if (!m) return note;
+  const name = m[1];
+  const acc = m[2];
+  const midi = getNoteMidi(name);
+  let offset = 0;
+  for (const ch of acc) offset += ch === '#' ? 1 : -1;
+  const names = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+  return names[((midi + offset) % 12 + 12) % 12];
 }
 
-// 获取和弦的音符（确保返回有效的音符格式）
 export function getChordNotes(chordName: string): string[] {
-  // 将和弦名中的降号转换为升号（Tonal.js 更喜欢升号格式）
-  const normalizedChord = chordName.replace(/([A-G][#b]?)b?(b?)/g, (match, note, extraB) => {
-    if (extraB) {
-      // 双重降号
-      const doubleFlatMap: Record<string, string> = {
-        'C': 'B', 'D': 'C#', 'E': 'D#', 'F': 'E', 'G': 'F#', 'A': 'G#', 'B': 'A#'
-      };
-      return doubleFlatMap[note] || match;
-    }
-    return flatToSharp(note);
+  // 只处理双重降号（如 Bbb → A），单降号直接交给 Tonal.js
+  const normalizedChord = chordName.replace(/[A-G]bb/g, (match) => {
+    const map: Record<string, string> = {
+      'Cbb': 'Bb', 'Dbb': 'C', 'Ebb': 'Db', 'Fbb': 'Eb', 'Gbb': 'F', 'Abb': 'Gb', 'Bbb': 'A'
+    };
+    return map[match] || match;
   });
 
   // 检查是否是斜线和弦
   const slashResult = parseSlashChord(normalizedChord);
   if (slashResult.bass) {
-    // 斜线和弦：低音 + 主和弦
     return [slashResult.bass, ...slashResult.chord];
   }
-  
+
   try {
     const chord = Chord.get(normalizedChord);
     if (chord && chord.notes && chord.notes.length > 0) {
-      // Tonal 返回的音符没有八度，需要智能添加八度
-      // 根音放在八度 4，其他音符根据音程关系分配到合适八度
-      return addOctavesToChord(chord.notes);
+      return addOctavesToChord(chord.notes.map(simplifyAccidental));
     }
     return parseChordManually(normalizedChord);
   } catch {
@@ -305,10 +302,10 @@ export function parseChordInput(input: string): string[] {
         return noteMap[note.toUpperCase()] || match;
       });
       
-      // 只对根音转大写，保留后缀大小写
+      // 只大写根音字母，保留升降号和后缀的大小写
       const match = c.match(/^([A-G][#b]?)(.*)$/i);
       if (match) {
-        return match[1].toUpperCase() + match[2];
+        return match[1].charAt(0).toUpperCase() + match[1].slice(1) + match[2];
       }
       return c.toUpperCase();
     })
