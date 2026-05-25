@@ -33,20 +33,22 @@
       <span class="text-sm font-medium" style="color: #666666;">
         {{ isZh ? '变调夹' : 'Capo' }}
       </span>
-      <div class="flex items-center gap-2">
-        <button
-          v-for="fret in [-2, -1, 0, 1, 2, 3, 4, 5, 6, 7]"
-          :key="fret"
-          @click="emit('update:capo', fret)"
-          :class="[
-            'w-10 h-10 rounded-full font-medium text-sm transition-all duration-200',
-          ]"
-          :style="capo === fret 
-            ? { backgroundColor: '#111111', color: 'white' } 
-            : { backgroundColor: '#EAEAEA', color: '#666666' }"
-        >
-          {{ fret === 0 ? 0 : fret }}
-        </button>
+      <div class="w-full overflow-x-auto pb-1">
+        <div class="flex items-center justify-center gap-2 min-w-max px-2 mb-1">
+          <button
+            v-for="fret in [-2, -1, 0, 1, 2, 3, 4, 5, 6, 7]"
+            :key="fret"
+            @click="emit('update:capo', fret)"
+            :class="[
+              'w-10 h-10 rounded-full font-medium text-sm transition-all duration-200',
+            ]"
+            :style="capo === fret
+              ? { backgroundColor: '#111111', color: 'white' }
+              : { backgroundColor: '#EAEAEA', color: '#666666' }"
+          >
+            {{ fret === 0 ? 0 : fret }}
+          </button>
+        </div>
       </div>
     </div>
 
