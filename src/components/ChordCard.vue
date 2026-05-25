@@ -5,22 +5,29 @@
       <label class="block text-sm font-medium mb-2 text-center" style="color: #666666;">
         {{ isZh ? '和弦输入' : 'Chord Input' }}
       </label>
-      <input
+      <textarea
+        ref="textareaRef"
         :value="modelValue"
-        @input="emit('update:modelValue', ($event.target as HTMLInputElement).value)"
-        type="text"
-        maxlength="100"
+        @input="onInput"
+        rows="1"
         :placeholder="isZh ? '例如: C G Am F' : 'e.g. C G Am F'"
         class="
-          w-full px-4 py-3 rounded-card text-base
+          w-full px-4 py-3 rounded-card text-base resize-none
           bg-gray-50 border
           text-primary placeholder-muted
           focus:outline-none focus:ring-2 focus:ring-gray-300
           transition-all duration-200
         "
-        style="border-color: #EAEAEA; color: #111111;"
-      />
-      <p class="mt-2 text-xs text-center" style="color: #999999;">
+        style="border-color: #EAEAEA; color: #111111; min-height: 48px; overflow-y: hidden;"
+      ></textarea>
+      <p
+        v-if="modelValue.length > 100"
+        class="mt-2 text-xs text-center"
+        style="color: #FF3B30;"
+      >
+        {{ isZh ? `已超出限度（${modelValue.length}/100）` : `Limit exceeded (${modelValue.length}/100)` }}
+      </p>
+      <p v-else class="mt-2 text-xs text-center" style="color: #999999;">
         {{ isZh ? '支持格式: C, Am, G7, Fmaj7, Cmaj7, Dsus4 等常见和弦' : 'Supported: C, Am, G7, Fmaj7, Cmaj7, Dsus4 and common chords' }}
       </p>
     </div>
@@ -90,9 +97,9 @@
 </template>
 
 <script setup lang="ts">
-import { inject, computed } from 'vue';
+import { inject, computed, ref, watch, nextTick } from 'vue';
 
-defineProps<{
+const props = defineProps<{
   modelValue: string;
   instrument: 'piano' | 'guitar';
   capo: number;
@@ -105,7 +112,23 @@ const emit = defineEmits<{
   (e: 'update:transpose', value: number): void;
 }>();
 
-// 从父组件获取语言设置
 const locale = inject<{ value: 'en' | 'zh' }>('locale');
 const isZh = computed(() => locale?.value === 'zh');
+
+const textareaRef = ref<HTMLTextAreaElement | null>(null);
+
+function autoResize() {
+  nextTick(() => {
+    const el = textareaRef.value;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
+  });
+}
+
+function onInput(e: Event) {
+  emit('update:modelValue', (e.target as HTMLTextAreaElement).value);
+}
+
+watch(() => props.modelValue, autoResize, { immediate: true });
 </script>
