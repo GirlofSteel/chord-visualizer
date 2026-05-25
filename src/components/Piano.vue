@@ -19,15 +19,16 @@
       >
         <!-- 左侧和弦名称 -->
         <div class="chord-name">
-          <div class="text-lg">
+          <!-- 桌面：纵向排列；手机：横向单行 -->
+          <div class="chord-name-row">
             <template v-if="chord.name !== chord.originalName">
-              <span style="color: #999999;">{{ chord.originalName }}</span>
-              <span style="color: #BBBBBB; margin: 0 4px;">→</span>
-              <span class="font-semibold" style="color: #111111;">{{ chord.name }}</span>
+              <span class="chord-original">{{ chord.originalName }}</span>
+              <span class="chord-arrow">→</span>
+              <span class="chord-transposed">{{ chord.name }}</span>
             </template>
-            <span v-else class="font-semibold" style="color: #111111;">{{ chord.name }}</span>
+            <span v-else class="chord-transposed">{{ chord.name }}</span>
+            <span class="chord-notes">{{ chord.notes.join(' - ') }}</span>
           </div>
-          <span class="text-xs mt-1" style="color: #999999;">{{ chord.notes.join(' - ') }}</span>
         </div>
 
         <!-- 右侧钢琴键盘 -->
@@ -98,5 +99,85 @@ const onRowClick = (chordName: string, index: number, originalChordName: string)
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.chord-name-row {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.chord-original {
+  color: #999999;
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+}
+
+.chord-arrow {
+  color: #BBBBBB;
+  margin: 0 4px;
+  font-size: 1.125rem;
+}
+
+.chord-transposed {
+  font-weight: 600;
+  color: #111111;
+  font-size: 1.125rem;
+  line-height: 1.75rem;
+}
+
+.chord-notes {
+  font-size: 0.75rem;
+  color: #999999;
+}
+
+/* 手机端：上下堆叠 */
+@media (max-width: 640px) {
+  .chord-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+    padding: 8px 12px;
+  }
+
+  .chord-name {
+    width: 100%;
+  }
+
+  .chord-name-row {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .chord-original {
+    font-size: 0.8125rem;
+    line-height: 1.25rem;
+  }
+
+  .chord-arrow {
+    font-size: 0.8125rem;
+    margin: 0 2px;
+  }
+
+  .chord-transposed {
+    font-size: 0.9375rem;
+    line-height: 1.5rem;
+  }
+
+  .chord-notes {
+    margin-left: 2px;
+  }
+}
+
+/* 桌面端：横向布局 */
+@media (min-width: 641px) {
+  .chord-notes {
+    display: block;
+    margin-top: 4px;
+  }
 }
 </style>
