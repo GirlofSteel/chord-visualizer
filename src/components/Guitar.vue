@@ -93,6 +93,14 @@ defineEmits<{
   (e: 'click', chord: string, index: number): void;
 }>();
 
+// 将降号根音归一化为升号（Db→C#, Eb→D# 等）
+function normalizeRoot(root: string): string {
+  const flatToSharp: Record<string, string> = {
+    'Db': 'C#', 'Eb': 'D#', 'Gb': 'F#', 'Ab': 'G#', 'Bb': 'A#',
+  };
+  return flatToSharp[root] || root;
+}
+
 function getRawFingering(chordName: string): string[] {
   if (CHORD_FINGERINGS[chordName]) {
     return CHORD_FINGERINGS[chordName];
@@ -101,7 +109,7 @@ function getRawFingering(chordName: string): string[] {
   const match = chordName.match(/^([A-G][#b]?)(.*)$/);
   if (!match) return ['X', 'X', 'X', 'X', 'X', 'X'];
 
-  const root = match[1];
+  const root = normalizeRoot(match[1]);
   const suffix = match[2] || '';
 
   const withSuffix = CHORD_FINGERINGS[root + suffix];
