@@ -68,7 +68,7 @@ function addOctavesToChord(notes: string[]): string[] {
 
 // 解析斜线和弦，返回 [低音音符, 和弦音符数组]
 function parseSlashChord(chordName: string): { bass: string | null; chord: string[] } {
-  const slashMatch = chordName.match(/^([A-G][#b]?(?:mMaj7|maj9|maj11|maj13|m13|m11|m9|m7b5|m7|m6|maj7|dim7|dim|aug7|aug|7sus4|sus4|sus2|7b5|7#5|7b9|7#9|9sus4|69|7|9|11|13|6|m|5|add\d+|madd\d+)?)\/([A-G][#b]?)$/);
+  const slashMatch = chordName.match(/^([A-G][#b]?(?:mMaj7|maj9|maj11|maj13|m13|m11|m9|m7b5|m7|m6|maj7|dim7|dim|aug7|aug|7sus4|7sus2|sus4|sus2|7b5|7#5|7b9|7#9|9sus4|69|7|9|11|13|6|m|5|add\d+|madd\d+)?)\/([A-G][#b]?)$/);
   if (!slashMatch) {
     return { bass: null, chord: [] };
   }
@@ -109,6 +109,7 @@ function parseChordManually(chordName: string): string[] {
     'sus4': [0, 5, 7],      // sus4
     'sus2': [0, 2, 7],      // sus2
     '7sus4': [0, 5, 7, 10], // 7sus4
+    '7sus2': [0, 2, 7, 10], // 7sus2
     '7': [0, 4, 7, 10],     // dom7
     '6': [0, 4, 7, 9],      // 6th
     '9': [0, 4, 7, 10, 14], // dom9
@@ -309,5 +310,5 @@ export function parseChordInput(input: string): string[] {
       }
       return c.toUpperCase();
     })
-    .filter(c => c.length > 0 && /^[A-G][#b]?(mMaj7|maj9|maj11|maj13|m13|m11|m9|m7b5|m7|m6|maj7|dim7|dim|aug7|aug|7sus4|sus4|sus2|7b5|7#5|7b9|7#9|9sus4|69|7|9|11|13|6|m|5|add\d+|madd\d+)?(\/[A-G][#b]?)?$/.test(c));
+    .filter(c => c.length > 0 && /^[A-G][#b]?(mMaj7|maj9|maj11|maj13|m13|m11|m9|m7b5|m7|m6|maj7|dim7|dim|aug7|aug|7sus4|7sus2|sus4|sus2|7b5|7#5|7b9|7#9|9sus4|69|7|9|11|13|6|m|5|add\d+|madd\d+)?(\/[A-G][#b]?)?$/.test(c));
 }
