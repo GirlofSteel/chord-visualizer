@@ -78,10 +78,27 @@ export function useAudio() {
   let sequence: Tone.Sequence | null = null;
   let chords: string[] = [];
 
+  // iOS 静音模式绕过：先播放 HTML5 无声片段将系统音频切到媒体通道
+  const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+  const ensureMediaAudio = (() => {
+    let done = false;
+    return async () => {
+      if (done) return;
+      done = true;
+      if (Tone.context.state !== 'running') {
+        await Tone.start();
+      }
+      if (isIOS) {
+        const a = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
+        a.volume = 0.001;
+        try { await a.play(); } catch { /* 忽略 */ }
+        a.pause(); a.remove();
+      }
+    };
+  })();
+
   const initPianoAudio = async () => {
-    if (Tone.context.state !== 'running') {
-      await Tone.start();
-    }
+    await ensureMediaAudio();
 
     if (pianoSynth) return pianoSynth;
 
@@ -99,9 +116,7 @@ export function useAudio() {
   };
 
   const initGuitarAudio = async () => {
-    if (Tone.context.state !== 'running') {
-      await Tone.start();
-    }
+    await ensureMediaAudio();
 
     if (guitarSynth) return guitarSynth;
 
