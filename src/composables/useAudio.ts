@@ -78,21 +78,22 @@ export function useAudio() {
   let sequence: Tone.Sequence | null = null;
   let chords: string[] = [];
 
-  // iOS 静音模式绕过：先播放 HTML5 无声片段将系统音频切到媒体通道
+  // iOS 静音模式绕过：HTML5 音频先播（切到媒体通道），再启动 Web Audio
   const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
   const ensureMediaAudio = (() => {
     let done = false;
     return async () => {
       if (done) return;
       done = true;
-      if (Tone.context.state !== 'running') {
-        await Tone.start();
-      }
+      // iOS 必须先播 HTML5 音频设置媒体通道，再启动 Web Audio
       if (isIOS) {
         const a = new Audio('data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=');
         a.volume = 0.001;
         try { await a.play(); } catch { /* 忽略 */ }
         a.pause(); a.remove();
+      }
+      if (Tone.context.state !== 'running') {
+        await Tone.start();
       }
     };
   })();
